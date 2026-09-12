@@ -43,9 +43,9 @@ app = FastAPI(
 allowed_origins = [
     "http://localhost:5173",
     "http://127.0.0.1:5173",
+    "https://vitals-mauve-mu.vercel.app/"
 
-    # Replace this with your actual Vercel frontend URL:
-    "https://YOUR-VITALS-FRONTEND.vercel.app",
+   
 ]
 
 

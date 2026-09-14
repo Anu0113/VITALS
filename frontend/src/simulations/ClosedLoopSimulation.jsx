@@ -244,11 +244,11 @@ export default function ClosedLoopSimulation() {
     }
 
     return [
-      { step: "Predicted", glucose: predicted },
-      { step: "+5 min", glucose: predicted - (predicted - endValue) * 0.2 },
-      { step: "+10 min", glucose: predicted - (predicted - endValue) * 0.45 },
-      { step: "+15 min", glucose: predicted - (predicted - endValue) * 0.7 },
-      { step: "+20 min", glucose: endValue },
+      { step: "0", glucose: predicted },
+      { step: "1", glucose: predicted - (predicted - endValue) * 0.2 },
+      { step: "2", glucose: predicted - (predicted - endValue) * 0.45 },
+      { step: "3", glucose: predicted - (predicted - endValue) * 0.7 },
+      { step: "4", glucose: endValue },
     ];
   }, [currentGlucose, predictedGlucose]);
 
@@ -480,77 +480,181 @@ function StageVisual({
 }) {
   if (stage === 0) {
     return (
-      <div className="cl-sense-scene">
-        <div className="cl-sense-stage">
-          <motion.div
-            className="cl-patch-assembly"
-            animate={{ y: [0, 30, 30, 0] }}
-            transition={{
-              duration: 3.6,
-              repeat: Infinity,
-              times: [0, 0.35, 0.68, 1],
-              ease: "easeInOut",
+      <div
+        className="cl-sense-scene"
+        style={{
+          position: "relative",
+          width: "100%",
+          minHeight: 620,
+          height: 620,
+          overflow: "hidden",
+        }}
+      >
+        <motion.div
+          className="cl-patch-assembly"
+          style={{
+            position: "absolute",
+            top: 34,
+            left: 0,
+            right: 0,
+            margin: "0 auto",
+            width: "min(510px, 72%)",
+            zIndex: 8,
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            pointerEvents: "none",
+          }}
+          animate={{ y: [0, 26, 26, 0] }}
+          transition={{
+            duration: 3.8,
+            repeat: Infinity,
+            times: [0, 0.34, 0.68, 1],
+            ease: "easeInOut",
+          }}
+        >
+          <div
+            className="cl-patch"
+            style={{
+              position: "relative",
+              width: "100%",
+              height: 112,
+              minHeight: 112,
+              inset: "auto",
+              transform: "none",
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              justifyContent: "center",
+              textAlign: "center",
+              overflow: "visible",
+              borderRadius: "26px 26px 12px 12px",
+              boxSizing: "border-box",
             }}
           >
-            <div className="cl-patch">
-              <strong>VITALS PATCH</strong>
-              <span>Microneedle glucose-sensing layer</span>
-            </div>
+            <strong>VITALS PATCH</strong>
+            <span>Microneedle glucose-sensing layer</span>
+          </div>
 
-            <div className="cl-needle-row">
-              {Array.from({ length: 9 }).map((_, index) => (
-                <motion.i
-                  key={index}
-                  animate={{ opacity: [0.75, 1, 1, 0.75] }}
-                  transition={{
-                    duration: 3.6,
-                    repeat: Infinity,
-                    delay: index * 0.04,
-                  }}
-                />
-              ))}
-            </div>
-          </motion.div>
-
-          <div className="cl-skin-box">
-            <div className="cl-skin-layer surface">Skin Surface</div>
-            <div className="cl-skin-layer epidermis">Epidermis</div>
-            <div className="cl-skin-layer dermis">Dermis</div>
-            <div className="cl-skin-layer fluid">Interstitial Fluid</div>
-
-            {Array.from({ length: 16 }).map((_, index) => (
-              <motion.span
+          <div
+            className="cl-needle-row"
+            style={{
+              position: "relative",
+              width: "calc(100% - 54px)",
+              height: 66,
+              marginTop: -1,
+              display: "flex",
+              alignItems: "flex-start",
+              justifyContent: "space-evenly",
+              gap: 8,
+              overflow: "visible",
+              zIndex: 10,
+            }}
+          >
+            {Array.from({ length: 9 }).map((_, index) => (
+              <motion.i
                 key={index}
-                className="cl-molecule"
                 style={{
-                  left: `${8 + (index % 8) * 11}%`,
-                  top: `${50 + (index % 4) * 10}%`,
+                  display: "block",
+                  position: "relative",
+                  width: 12,
+                  minWidth: 12,
+                  height: 66,
+                  minHeight: 66,
+                  clipPath: "polygon(0 0, 100% 0, 50% 100%)",
+                  background:
+                    "linear-gradient(180deg, #8decff 0%, #49cbf7 48%, #178fc5 100%)",
+                  filter: "drop-shadow(0 0 7px rgba(73,203,247,.72))",
+                  transformOrigin: "top center",
                 }}
                 animate={{
-                  x: [0, index % 2 === 0 ? 10 : -10, 0],
-                  y: [0, -8, 0],
-                  opacity: [0.7, 1, 0.7],
+                  scaleY: [0.92, 1.08, 1.08, 0.92],
+                  opacity: [0.82, 1, 1, 0.82],
                 }}
                 transition={{
-                  duration: 1.6 + (index % 5) * 0.25,
+                  duration: 3.8,
                   repeat: Infinity,
+                  times: [0, 0.34, 0.68, 1],
+                  delay: index * 0.025,
                 }}
               />
             ))}
+          </div>
+        </motion.div>
 
-            <motion.div
-              className="cl-detect-pulse"
-              animate={{
-                scale: [0.8, 1.4, 1.8],
-                opacity: [0.7, 0.3, 0],
+        <div
+          className="cl-skin-box"
+          style={{
+            position: "absolute",
+            top: 228,
+            left: 0,
+            right: 0,
+            margin: "0 auto",
+            width: "min(620px, 82%)",
+            height: 318,
+            borderRadius: 26,
+            overflow: "hidden",
+            zIndex: 2,
+          }}
+        >
+          <div className="cl-skin-layer surface" style={{ height: 42 }}>
+            Skin Surface
+          </div>
+          <div className="cl-skin-layer epidermis" style={{ height: 116 }}>
+            Epidermis
+          </div>
+          <div className="cl-skin-layer dermis" style={{ height: 110 }}>
+            Dermis
+          </div>
+          <div className="cl-skin-layer fluid" style={{ height: 50 }}>
+            Interstitial Fluid
+          </div>
+
+          {Array.from({ length: 16 }).map((_, index) => (
+            <motion.span
+              key={index}
+              className="cl-molecule"
+              style={{
+                left: `${8 + (index % 8) * 11}%`,
+                top: `${50 + (index % 4) * 10}%`,
               }}
-              transition={{ duration: 1.4, repeat: Infinity }}
+              animate={{
+                x: [0, index % 2 === 0 ? 10 : -10, 0],
+                y: [0, -8, 0],
+                opacity: [0.7, 1, 0.7],
+              }}
+              transition={{
+                duration: 1.6 + (index % 5) * 0.25,
+                repeat: Infinity,
+              }}
             />
-          </div>
+          ))}
 
-          <div className="cl-scene-note">
-            Microneedle sensor detecting glucose in interstitial fluid...
-          </div>
+          <motion.div
+            className="cl-detect-pulse"
+            animate={{
+              scale: [0.8, 1.4, 1.8],
+              opacity: [0.7, 0.3, 0],
+            }}
+            transition={{ duration: 1.4, repeat: Infinity }}
+          />
+        </div>
+
+        <div
+          className="cl-scene-note"
+          style={{
+            position: "absolute",
+            left: 0,
+            right: 0,
+            bottom: 14,
+            margin: "0 auto",
+            width: "fit-content",
+            maxWidth: "calc(100% - 48px)",
+            textAlign: "center",
+            zIndex: 12,
+          }}
+        >
+          Microneedle sensor detecting glucose in interstitial fluid...
         </div>
       </div>
     );
@@ -625,26 +729,54 @@ function StageVisual({
 
   if (stage === 3) {
     return (
-      <div className="cl-chart-scene">
-        <div className="cl-mini-chart">
-          <ResponsiveContainer width="100%" height={280}>
+      <div
+        className="cl-chart-scene"
+        style={{
+          width: "100%",
+          minHeight: 560,
+          display: "grid",
+          gridTemplateColumns: "minmax(0, 1.45fr) minmax(260px, .85fr)",
+          alignItems: "center",
+          gap: 30,
+          padding: 34,
+          boxSizing: "border-box",
+        }}
+      >
+        <div
+          className="cl-mini-chart"
+          style={{
+            width: "100%",
+            minWidth: 0,
+            maxWidth: "none",
+            height: 340,
+            padding: "18px 12px 8px",
+            boxSizing: "border-box",
+          }}
+        >
+          <ResponsiveContainer width="100%" height={310}>
             <LineChart
               data={predictionChartData}
-              margin={{ top: 16, right: 18, left: 0, bottom: 10 }}
+              margin={{ top: 18, right: 22, left: 6, bottom: 18 }}
             >
-              <CartesianGrid stroke="#18384d" strokeDasharray="4 6" vertical={false} />
+              <CartesianGrid
+                stroke="#18384d"
+                strokeDasharray="4 6"
+                vertical={false}
+              />
               <XAxis
                 dataKey="label"
                 stroke="#7393a8"
                 interval={0}
                 tick={{ fontSize: 12 }}
                 tickMargin={10}
+                minTickGap={0}
               />
               <YAxis
                 stroke="#7393a8"
-                domain={["dataMin - 10", "dataMax + 10"]}
-                width={44}
+                width={50}
                 tick={{ fontSize: 12 }}
+                domain={["dataMin - 15", "dataMax + 15"]}
+                tickCount={5}
               />
               <Tooltip
                 contentStyle={{
@@ -659,7 +791,7 @@ function StageVisual({
                 stroke="#3bc5ff"
                 strokeWidth={3}
                 connectNulls
-                dot={{ r: 4, strokeWidth: 2 }}
+                dot={{ r: 4 }}
                 activeDot={{ r: 6 }}
               />
               <Line
@@ -669,14 +801,29 @@ function StageVisual({
                 strokeWidth={3}
                 strokeDasharray="6 6"
                 connectNulls
-                dot={{ r: 4, strokeWidth: 2 }}
-                activeDot={{ r: 6 }}
+                dot={{ r: 5 }}
+                activeDot={{ r: 7 }}
               />
             </LineChart>
           </ResponsiveContainer>
         </div>
 
-        <div className="cl-predict-card">
+        <div
+          className="cl-predict-card"
+          style={{
+            width: "100%",
+            maxWidth: 410,
+            minHeight: 190,
+            justifySelf: "center",
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            justifyContent: "center",
+            textAlign: "center",
+            padding: 28,
+            boxSizing: "border-box",
+          }}
+        >
           <span>AI PREDICTION</span>
           <strong>{predictedGlucose.toFixed(2)} mg/dL</strong>
           <small>Approximate 15-minute-ahead predicted reading</small>
@@ -761,26 +908,54 @@ function StageVisual({
 
   if (stage === 7) {
     return (
-      <div className="cl-chart-scene">
-        <div className="cl-mini-chart">
-          <ResponsiveContainer width="100%" height={280}>
+      <div
+        className="cl-chart-scene"
+        style={{
+          width: "100%",
+          minHeight: 560,
+          display: "grid",
+          gridTemplateColumns: "minmax(0, 1.45fr) minmax(260px, .85fr)",
+          alignItems: "center",
+          gap: 30,
+          padding: 34,
+          boxSizing: "border-box",
+        }}
+      >
+        <div
+          className="cl-mini-chart"
+          style={{
+            width: "100%",
+            minWidth: 0,
+            maxWidth: "none",
+            height: 340,
+            padding: "18px 12px 8px",
+            boxSizing: "border-box",
+          }}
+        >
+          <ResponsiveContainer width="100%" height={310}>
             <AreaChart
               data={responseChartData}
-              margin={{ top: 16, right: 18, left: 0, bottom: 10 }}
+              margin={{ top: 18, right: 22, left: 6, bottom: 18 }}
             >
-              <CartesianGrid stroke="#18384d" strokeDasharray="4 6" vertical={false} />
+              <CartesianGrid
+                stroke="#18384d"
+                strokeDasharray="4 6"
+                vertical={false}
+              />
               <XAxis
                 dataKey="step"
                 stroke="#7393a8"
                 interval={0}
-                tick={{ fontSize: 12 }}
+                tick={{ fontSize: 11 }}
                 tickMargin={10}
+                minTickGap={0}
               />
               <YAxis
                 stroke="#7393a8"
-                domain={["dataMin - 10", "dataMax + 10"]}
-                width={44}
+                width={50}
                 tick={{ fontSize: 12 }}
+                domain={["dataMin - 15", "dataMax + 15"]}
+                tickCount={5}
               />
               <Tooltip
                 contentStyle={{
@@ -796,15 +971,34 @@ function StageVisual({
                 fill="#57e0ad"
                 fillOpacity={0.18}
                 strokeWidth={3}
+                dot={{ r: 4 }}
+                activeDot={{ r: 6 }}
               />
             </AreaChart>
           </ResponsiveContainer>
         </div>
 
-        <div className="cl-predict-card green">
+        <div
+          className="cl-predict-card green"
+          style={{
+            width: "100%",
+            maxWidth: 410,
+            minHeight: 190,
+            justifySelf: "center",
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            justifyContent: "center",
+            textAlign: "center",
+            padding: 28,
+            boxSizing: "border-box",
+          }}
+        >
           <span>SIMULATED GLUCOSE RESPONSE</span>
           <strong>
-            {Number(responseChartData[responseChartData.length - 1]?.glucose).toFixed(2)} mg/dL
+            {Number(
+              responseChartData[responseChartData.length - 1]?.glucose
+            ).toFixed(2)} mg/dL
           </strong>
           <small>Conceptual post-response glucose behaviour</small>
         </div>
@@ -813,19 +1007,63 @@ function StageVisual({
   }
 
   return (
-    <div className="cl-repeat-scene">
-      <motion.div
-        className="cl-repeat-ring"
-        animate={{ rotate: 360 }}
-        transition={{ duration: 8, repeat: Infinity, ease: "linear" }}
+    <div
+      className="cl-repeat-scene"
+      style={{
+        position: "relative",
+        width: "100%",
+        minHeight: 560,
+        display: "grid",
+        placeItems: "center",
+        overflow: "hidden",
+      }}
+    >
+      <div
+        style={{
+          position: "absolute",
+          inset: 0,
+          display: "grid",
+          placeItems: "center",
+          pointerEvents: "none",
+        }}
       >
-        <span className="dot one" />
-        <span className="dot two" />
-        <span className="dot three" />
-        <span className="dot four" />
-      </motion.div>
+        <motion.div
+          className="cl-repeat-ring"
+          style={{
+            position: "relative",
+            width: 320,
+            height: 320,
+            inset: "auto",
+            margin: 0,
+            borderRadius: "50%",
+          }}
+          animate={{ rotate: 360 }}
+          transition={{ duration: 8, repeat: Infinity, ease: "linear" }}
+        >
+          <span className="dot one" />
+          <span className="dot two" />
+          <span className="dot three" />
+          <span className="dot four" />
+        </motion.div>
+      </div>
 
-      <div className="cl-repeat-center">
+      <div
+        className="cl-repeat-center"
+        style={{
+          position: "relative",
+          inset: "auto",
+          transform: "none",
+          width: 280,
+          minHeight: 180,
+          zIndex: 5,
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          justifyContent: "center",
+          gap: 10,
+          textAlign: "center",
+        }}
+      >
         <RefreshCcw size={42} />
         <strong>Monitoring Again</strong>
         <span>Closed-loop cycle restarting</span>

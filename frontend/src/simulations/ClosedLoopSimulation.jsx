@@ -221,7 +221,7 @@ export default function ClosedLoopSimulation() {
     });
 
     base.push({
-      label: "30 min",
+      label: "15 min",
       observed: null,
       predicted: predictedGlucose,
     });
@@ -481,64 +481,71 @@ function StageVisual({
   if (stage === 0) {
     return (
       <div className="cl-sense-scene">
-        <motion.div
-          className="cl-patch"
-          animate={{ y: [0, 8, 0] }}
-          transition={{ duration: 2.2, repeat: Infinity }}
-        >
-          <strong>VITALS PATCH</strong>
-          <span>Microneedle glucose-sensing layer</span>
+        <div className="cl-sense-stage">
+          <motion.div
+            className="cl-patch-assembly"
+            animate={{ y: [0, 5, 0] }}
+            transition={{ duration: 2.2, repeat: Infinity }}
+          >
+            <div className="cl-patch">
+              <strong>VITALS PATCH</strong>
+              <span>Microneedle glucose-sensing layer</span>
+            </div>
 
-          <div className="cl-needle-row">
-            {Array.from({ length: 9 }).map((_, index) => (
-              <motion.i
+            <div className="cl-needle-row">
+              {Array.from({ length: 9 }).map((_, index) => (
+                <motion.i
+                  key={index}
+                  animate={{ scaleY: [0.92, 1.08, 0.92] }}
+                  transition={{
+                    duration: 1.3,
+                    repeat: Infinity,
+                    delay: index * 0.08,
+                  }}
+                />
+              ))}
+            </div>
+          </motion.div>
+
+          <div className="cl-skin-box">
+            <div className="cl-skin-layer surface">Skin Surface</div>
+            <div className="cl-skin-layer epidermis">Epidermis</div>
+            <div className="cl-skin-layer dermis">Dermis</div>
+            <div className="cl-skin-layer fluid">Interstitial Fluid</div>
+
+            {Array.from({ length: 16 }).map((_, index) => (
+              <motion.span
                 key={index}
-                animate={{ height: [20, 34, 20] }}
+                className="cl-molecule"
+                style={{
+                  left: `${8 + (index % 8) * 11}%`,
+                  top: `${50 + (index % 4) * 10}%`,
+                }}
+                animate={{
+                  x: [0, index % 2 === 0 ? 10 : -10, 0],
+                  y: [0, -8, 0],
+                  opacity: [0.7, 1, 0.7],
+                }}
                 transition={{
-                  duration: 1.3,
+                  duration: 1.6 + (index % 5) * 0.25,
                   repeat: Infinity,
-                  delay: index * 0.08,
                 }}
               />
             ))}
-          </div>
-        </motion.div>
 
-        <div className="cl-skin-box">
-          <div className="cl-skin-layer surface">Skin Surface</div>
-          <div className="cl-skin-layer epidermis">Epidermis</div>
-          <div className="cl-skin-layer dermis">Dermis</div>
-          <div className="cl-skin-layer fluid">Interstitial Fluid</div>
-
-          {Array.from({ length: 16 }).map((_, index) => (
-            <motion.span
-              key={index}
-              className="cl-molecule"
-              style={{
-                left: `${8 + (index % 8) * 11}%`,
-                top: `${50 + (index % 4) * 10}%`,
-              }}
+            <motion.div
+              className="cl-detect-pulse"
               animate={{
-                x: [0, index % 2 === 0 ? 10 : -10, 0],
-                y: [0, -8, 0],
-                opacity: [0.7, 1, 0.7],
+                scale: [0.8, 1.4, 1.8],
+                opacity: [0.7, 0.3, 0],
               }}
-              transition={{
-                duration: 1.6 + (index % 5) * 0.25,
-                repeat: Infinity,
-              }}
+              transition={{ duration: 1.4, repeat: Infinity }}
             />
-          ))}
+          </div>
 
-          <motion.div
-            className="cl-detect-pulse"
-            animate={{ scale: [0.8, 1.4, 1.8], opacity: [0.7, 0.3, 0] }}
-            transition={{ duration: 1.4, repeat: Infinity }}
-          />
-        </div>
-
-        <div className="cl-scene-note">
-          Microneedle sensor detecting glucose in interstitial fluid...
+          <div className="cl-scene-note">
+            Microneedle sensor detecting glucose in interstitial fluid...
+          </div>
         </div>
       </div>
     );
@@ -651,7 +658,7 @@ function StageVisual({
         <div className="cl-predict-card">
           <span>AI PREDICTION</span>
           <strong>{predictedGlucose.toFixed(2)} mg/dL</strong>
-          <small>Approximate next predicted reading</small>
+          <small>Approximate 15-minute-ahead predicted reading</small>
         </div>
       </div>
     );

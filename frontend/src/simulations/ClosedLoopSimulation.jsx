@@ -4,8 +4,11 @@ import {
   Activity,
   AlertTriangle,
   BrainCircuit,
+  CircleGauge,
+  Droplets,
   RefreshCcw,
   ShieldAlert,
+  Syringe,
   TrendingUp,
   Zap,
 } from "lucide-react";
@@ -53,14 +56,14 @@ const STAGES = [
     title: "Predict",
     short: "Future glucose prediction",
     description:
-      "The LSTM-based AI estimates the next glucose reading approximately 15 minutes ahead.",
+      "The LSTM-based AI estimates how the glucose level may change in the near future.",
   },
   {
     id: 4,
     title: "Risk Analysis",
     short: "Risk evaluation",
     description:
-      "The prototype evaluates current and predicted glucose values for demonstration-only risk states.",
+      "The system evaluates the current and predicted glucose levels to identify normal, monitor, warning, or high-risk conditions.",
   },
   {
     id: 5,
@@ -81,7 +84,7 @@ const STAGES = [
     title: "Glucose Response",
     short: "Hypothetical response curve",
     description:
-      "The interface shows a conceptual glucose-response curve after the simulation-only response stage.",
+      "The interface shows a conceptual change in glucose after the simulated response stage.",
   },
   {
     id: 8,
@@ -121,23 +124,6 @@ function getDecisionText(current, predicted) {
   if (predicted > current + 12) return "Increase monitoring";
   if (predicted < 80) return "Low-glucose monitoring required";
   return "Continue monitoring";
-}
-
-function chartDomain(values, padding = 12) {
-  const finite = values.filter((value) => Number.isFinite(Number(value))).map(Number);
-  if (!finite.length) return [60, 160];
-
-  const min = Math.min(...finite);
-  const max = Math.max(...finite);
-
-  if (min === max) {
-    return [Math.max(0, min - padding), max + padding];
-  }
-
-  return [
-    Math.max(0, Math.floor(min - padding)),
-    Math.ceil(max + padding),
-  ];
 }
 
 export default function ClosedLoopSimulation() {
@@ -184,10 +170,9 @@ export default function ClosedLoopSimulation() {
           loadVitalsData();
           return 0;
         }
-
         return previous + 1;
       });
-    }, 3200);
+    }, 2600);
 
     return () => clearInterval(interval);
   }, [running, paused]);
@@ -213,6 +198,7 @@ export default function ClosedLoopSimulation() {
   );
 
   const closedLoop = apiData?.closed_loop ?? {};
+
   const decision =
     closedLoop?.decision ??
     getDecisionText(currentGlucose, predictedGlucose);
@@ -243,15 +229,6 @@ export default function ClosedLoopSimulation() {
     return base;
   }, [recent, currentGlucose, predictedGlucose]);
 
-  const predictionDomain = useMemo(
-    () =>
-      chartDomain(
-        [...recent, currentGlucose, predictedGlucose].map(Number),
-        12
-      ),
-    [recent, currentGlucose, predictedGlucose]
-  );
-
   const responseChartData = useMemo(() => {
     const current = Number(currentGlucose);
     const predicted = Number(predictedGlucose);
@@ -267,18 +244,13 @@ export default function ClosedLoopSimulation() {
     }
 
     return [
-      { step: "Start", glucose: predicted },
+      { step: "0", glucose: predicted },
       { step: "1", glucose: predicted - (predicted - endValue) * 0.2 },
       { step: "2", glucose: predicted - (predicted - endValue) * 0.45 },
       { step: "3", glucose: predicted - (predicted - endValue) * 0.7 },
       { step: "4", glucose: endValue },
     ];
   }, [currentGlucose, predictedGlucose]);
-
-  const responseDomain = useMemo(
-    () => chartDomain(responseChartData.map((item) => item.glucose), 10),
-    [responseChartData]
-  );
 
   function handleStart() {
     setStage(0);
@@ -306,990 +278,7 @@ export default function ClosedLoopSimulation() {
   const riskClass = getRiskClass(risk);
 
   return (
-    <div className="cl-page cl-v2">
-      <style>{`
-        .cl-v2 {
-          --cl-bg: #06131f;
-          --cl-panel: #0a1d2b;
-          --cl-panel-2: #0d2637;
-          --cl-border: #173d55;
-          --cl-text: #e8f7ff;
-          --cl-muted: #7fa5ba;
-          --cl-blue: #3bc5ff;
-          --cl-purple: #a98aff;
-          --cl-green: #57e0ad;
-          --cl-orange: #f1b86a;
-          color: var(--cl-text);
-        }
-
-        .cl-v2 * {
-          box-sizing: border-box;
-        }
-
-        .cl-header,
-        .cl-panel-top,
-        .cl-main-layout,
-        .cl-reading-row,
-        .cl-warning-box,
-        .cl-watch-card {
-          display: flex;
-        }
-
-        .cl-header {
-          align-items: flex-start;
-          justify-content: space-between;
-          gap: 24px;
-          margin-bottom: 22px;
-        }
-
-        .cl-header h1 {
-          margin: 4px 0 8px;
-          font-size: clamp(28px, 4vw, 44px);
-        }
-
-        .cl-header p,
-        .cl-info-card p {
-          color: var(--cl-muted);
-          line-height: 1.65;
-        }
-
-        .cl-kicker {
-          color: #65cffa;
-          font-size: 11px;
-          font-weight: 800;
-          letter-spacing: 1.35px;
-        }
-
-        .cl-badge {
-          border: 1px solid #3a4f61;
-          background: #0a1824;
-          border-radius: 14px;
-          padding: 12px 15px;
-          min-width: 190px;
-        }
-
-        .cl-badge strong,
-        .cl-badge span {
-          display: block;
-        }
-
-        .cl-badge strong {
-          color: #f2c67d;
-          font-size: 11px;
-        }
-
-        .cl-badge span {
-          margin-top: 4px;
-          color: var(--cl-muted);
-          font-size: 10px;
-        }
-
-        .cl-error-banner {
-          display: flex;
-          gap: 10px;
-          align-items: flex-start;
-          margin-bottom: 18px;
-          padding: 12px 14px;
-          border: 1px solid #8d5f36;
-          border-radius: 12px;
-          background: #2d2116;
-          color: #ffd08e;
-        }
-
-        .cl-error-banner strong,
-        .cl-error-banner span {
-          display: block;
-        }
-
-        .cl-error-banner span {
-          margin-top: 4px;
-          font-size: 12px;
-          opacity: .85;
-        }
-
-        .cl-summary-grid {
-          display: grid;
-          grid-template-columns: repeat(4, minmax(0, 1fr));
-          gap: 14px;
-          margin: 20px 0;
-        }
-
-        .cl-summary-card {
-          min-height: 112px;
-          padding: 18px;
-          border: 1px solid var(--cl-border);
-          border-radius: 16px;
-          background: linear-gradient(145deg, #0b2233, #081824);
-        }
-
-        .cl-summary-card span,
-        .cl-summary-card strong {
-          display: block;
-        }
-
-        .cl-summary-card span {
-          margin-top: 10px;
-          color: var(--cl-muted);
-          font-size: 11px;
-        }
-
-        .cl-summary-card strong {
-          margin-top: 6px;
-          font-size: 18px;
-        }
-
-        .cl-summary-icon {
-          color: var(--cl-blue);
-        }
-
-        .cl-summary-card.purple .cl-summary-icon {
-          color: var(--cl-purple);
-        }
-
-        .cl-summary-card.normal .cl-summary-icon,
-        .cl-summary-card.green .cl-summary-icon {
-          color: var(--cl-green);
-        }
-
-        .cl-summary-card.warning .cl-summary-icon,
-        .cl-summary-card.monitor .cl-summary-icon,
-        .cl-summary-card.high .cl-summary-icon {
-          color: var(--cl-orange);
-        }
-
-        .cl-main-layout {
-          align-items: stretch;
-          gap: 18px;
-        }
-
-        .cl-visual-panel {
-          flex: 1 1 auto;
-          min-width: 0;
-          border: 1px solid var(--cl-border);
-          border-radius: 20px;
-          background: linear-gradient(145deg, #081b2a, #071522);
-          overflow: hidden;
-        }
-
-        .cl-info-panel {
-          width: 320px;
-          flex: 0 0 320px;
-          display: flex;
-          flex-direction: column;
-          gap: 12px;
-        }
-
-        .cl-info-card {
-          padding: 17px;
-          border: 1px solid var(--cl-border);
-          border-radius: 15px;
-          background: linear-gradient(145deg, #0a1e2d, #081823);
-        }
-
-        .cl-info-card h3 {
-          margin: 7px 0 5px;
-        }
-
-        .cl-panel-top {
-          align-items: center;
-          justify-content: space-between;
-          gap: 16px;
-          padding: 20px 22px;
-          border-bottom: 1px solid var(--cl-border);
-        }
-
-        .cl-panel-top h2 {
-          margin: 5px 0 2px;
-        }
-
-        .cl-panel-top p {
-          margin: 0;
-          color: var(--cl-muted);
-          font-size: 12px;
-        }
-
-        .cl-refresh-btn {
-          display: inline-flex;
-          align-items: center;
-          gap: 8px;
-          border: 1px solid #275776;
-          border-radius: 10px;
-          background: #0b293b;
-          color: #a7e6ff;
-          padding: 9px 12px;
-          cursor: pointer;
-        }
-
-        .cl-scene-shell {
-          position: relative;
-          min-height: 600px;
-          overflow: hidden;
-        }
-
-        .cl-scene-inner {
-          width: 100%;
-          height: 100%;
-          min-height: 600px;
-        }
-
-        .cl-stage-strip {
-          display: grid;
-          grid-template-columns: repeat(3, minmax(0, 1fr));
-          gap: 8px;
-          padding: 16px;
-          border-top: 1px solid var(--cl-border);
-        }
-
-        .cl-stage-pill {
-          display: flex;
-          align-items: center;
-          gap: 10px;
-          min-width: 0;
-          text-align: left;
-          border: 1px solid #173b52;
-          border-radius: 11px;
-          background: #081924;
-          color: #c7dce8;
-          padding: 10px;
-          cursor: pointer;
-        }
-
-        .cl-stage-pill > span {
-          display: grid;
-          place-items: center;
-          width: 24px;
-          height: 24px;
-          flex: 0 0 24px;
-          border-radius: 50%;
-          background: #123148;
-          color: #6edcff;
-          font-size: 11px;
-          font-weight: 800;
-        }
-
-        .cl-stage-pill strong,
-        .cl-stage-pill small {
-          display: block;
-        }
-
-        .cl-stage-pill strong {
-          font-size: 11px;
-        }
-
-        .cl-stage-pill small {
-          margin-top: 2px;
-          color: #678ca1;
-          font-size: 9px;
-        }
-
-        .cl-stage-pill.active {
-          border-color: #2c91ba;
-          background: #0c2a3c;
-        }
-
-        .cl-stage-pill.complete {
-          opacity: .78;
-        }
-
-        .cl-reading-row {
-          gap: 7px;
-          flex-wrap: wrap;
-          margin-top: 10px;
-        }
-
-        .cl-reading-chip {
-          min-width: 42px;
-          padding: 7px 9px;
-          border: 1px solid #1d4b65;
-          border-radius: 9px;
-          background: #0b2535;
-          text-align: center;
-          color: #b7e7fb;
-          font-size: 11px;
-          font-weight: 700;
-        }
-
-        .cl-decision-box {
-          margin-top: 9px;
-          padding: 11px;
-          border: 1px solid #24516d;
-          border-radius: 10px;
-          background: #0b2739;
-          color: #a8e8ff;
-          font-size: 12px;
-          line-height: 1.45;
-        }
-
-        .cl-warning-box {
-          align-items: flex-start;
-          gap: 10px;
-          margin-top: 9px;
-          padding: 11px;
-          border: 1px solid #6c5730;
-          border-radius: 10px;
-          background: #2a2114;
-          color: #e9c16e;
-        }
-
-        .cl-warning-box strong,
-        .cl-warning-box span {
-          display: block;
-        }
-
-        .cl-warning-box span {
-          margin-top: 4px;
-          color: #b99d65;
-          font-size: 10px;
-          line-height: 1.5;
-        }
-
-        .cl-sense-scene {
-          position: relative;
-          width: 100%;
-          min-height: 600px;
-          overflow: hidden;
-        }
-
-        .cl-patch-assembly-v2 {
-          position: absolute;
-          top: 52px;
-          left: 50%;
-          width: min(500px, 72%);
-          transform: translateX(-50%);
-          z-index: 10;
-          pointer-events: none;
-        }
-
-        .cl-patch-v2 {
-          position: relative;
-          z-index: 3;
-          height: 112px;
-          display: flex;
-          flex-direction: column;
-          justify-content: center;
-          align-items: center;
-          border: 1px solid #3e89ad;
-          border-radius: 34px 34px 13px 13px;
-          background: linear-gradient(180deg, #174c67, #0c2d42);
-          box-shadow: 0 18px 45px rgba(0, 0, 0, .35), 0 0 30px rgba(59, 197, 255, .08);
-          text-align: center;
-        }
-
-        .cl-patch-v2 strong {
-          letter-spacing: 2px;
-          font-size: 16px;
-        }
-
-        .cl-patch-v2 span {
-          margin-top: 6px;
-          color: #8cb2c6;
-          font-size: 11px;
-        }
-
-        .cl-needle-row-v2 {
-          position: relative;
-          z-index: 5;
-          height: 82px;
-          width: calc(100% - 54px);
-          margin: -1px auto 0;
-          display: flex;
-          justify-content: space-evenly;
-          align-items: flex-start;
-          overflow: visible;
-        }
-
-        .cl-needle-v2 {
-          display: block;
-          width: 11px;
-          height: 78px;
-          flex: 0 0 11px;
-          clip-path: polygon(0 0, 100% 0, 50% 100%);
-          background: linear-gradient(180deg, #b8f4ff 0%, #5bd5ff 44%, #1a89bd 100%);
-          filter: drop-shadow(0 0 7px rgba(80, 210, 255, .8));
-          transform-origin: top center;
-        }
-
-        .cl-skin-box-v2 {
-          position: absolute;
-          top: 250px;
-          left: 50%;
-          width: min(650px, 84%);
-          height: 285px;
-          transform: translateX(-50%);
-          border: 1px solid #274a5b;
-          border-radius: 23px;
-          overflow: hidden;
-          background: #17232b;
-          box-shadow: 0 18px 50px rgba(0,0,0,.25);
-        }
-
-        .cl-skin-layer-v2 {
-          position: relative;
-          width: 100%;
-          display: flex;
-          align-items: center;
-          padding-left: 18px;
-          color: rgba(255,255,255,.72);
-          font-size: 11px;
-          letter-spacing: .7px;
-        }
-
-        .cl-skin-layer-v2.surface {
-          height: 38px;
-          background: #d59a81;
-        }
-
-        .cl-skin-layer-v2.epidermis {
-          height: 72px;
-          background: linear-gradient(#dfaa94, #cc866f);
-        }
-
-        .cl-skin-layer-v2.dermis {
-          height: 105px;
-          background: linear-gradient(#9e5d50, #7f423e);
-        }
-
-        .cl-skin-layer-v2.fluid {
-          height: 70px;
-          background: linear-gradient(#173447, #123145);
-          color: #9ddcff;
-        }
-
-        .cl-molecule-v2 {
-          position: absolute;
-          width: 9px;
-          height: 9px;
-          border-radius: 50%;
-          background: #65dbff;
-          box-shadow: 0 0 12px rgba(101,219,255,.8);
-        }
-
-        .cl-detect-pulse-v2 {
-          position: absolute;
-          left: 50%;
-          bottom: 30px;
-          width: 38px;
-          height: 38px;
-          margin-left: -19px;
-          border: 2px solid #5cdcff;
-          border-radius: 50%;
-        }
-
-        .cl-scene-note-v2 {
-          position: absolute;
-          bottom: 18px;
-          left: 50%;
-          transform: translateX(-50%);
-          width: min(650px, 84%);
-          text-align: center;
-          color: #88b8cb;
-          font-size: 12px;
-        }
-
-        .cl-read-scene,
-        .cl-analyze-scene,
-        .cl-risk-scene,
-        .cl-decision-scene,
-        .cl-response-scene,
-        .cl-repeat-scene {
-          min-height: 600px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-        }
-
-        .cl-read-scene {
-          gap: 28px;
-          padding: 30px;
-          flex-wrap: wrap;
-        }
-
-        .cl-reading-display {
-          min-width: min(390px, 90%);
-          padding: 34px;
-          border: 1px solid #255b77;
-          border-radius: 20px;
-          background: #0a2536;
-          text-align: center;
-        }
-
-        .cl-reading-label {
-          color: #77c9ed;
-          font-size: 11px;
-          letter-spacing: 1px;
-        }
-
-        .cl-reading-value {
-          margin-top: 12px;
-          font-size: clamp(34px, 6vw, 62px);
-          font-weight: 800;
-        }
-
-        .cl-reading-value small {
-          font-size: 15px;
-          color: var(--cl-muted);
-        }
-
-        .cl-reading-trend {
-          margin-top: 10px;
-          color: #9edaff;
-        }
-
-        .cl-watch-card {
-          align-items: center;
-          gap: 14px;
-          min-width: min(330px, 90%);
-          padding: 18px;
-          border: 1px solid #1d4a63;
-          border-radius: 16px;
-          background: #091f2e;
-        }
-
-        .cl-watch-card strong,
-        .cl-watch-card span {
-          display: block;
-        }
-
-        .cl-watch-card span {
-          margin-top: 5px;
-          color: var(--cl-muted);
-          font-size: 11px;
-        }
-
-        .cl-watch-face {
-          width: 58px;
-          height: 58px;
-          display: grid;
-          place-items: center;
-          border-radius: 16px;
-          background: #0e344a;
-          color: #6edcff;
-        }
-
-        .cl-analyze-scene {
-          gap: 26px;
-          padding: 30px;
-          flex-wrap: wrap;
-        }
-
-        .cl-data-stream {
-          display: flex;
-          gap: 8px;
-          flex-wrap: wrap;
-          justify-content: center;
-        }
-
-        .cl-data-chip {
-          min-width: 64px;
-          padding: 13px;
-          border: 1px solid #24526d;
-          border-radius: 11px;
-          background: #0b2a3d;
-          color: #b4eaff;
-          text-align: center;
-          font-weight: 700;
-        }
-
-        .cl-flow-arrow {
-          color: #65d5ff;
-          font-size: 34px;
-        }
-
-        .cl-ai-core {
-          width: 190px;
-          height: 190px;
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          justify-content: center;
-          border: 1px solid #495783;
-          border-radius: 50%;
-          background: radial-gradient(circle, #182f4b, #0a1c2d 70%);
-          color: #b7a0ff;
-          box-shadow: 0 0 46px rgba(169,138,255,.16);
-        }
-
-        .cl-ai-core strong,
-        .cl-ai-core span {
-          display: block;
-        }
-
-        .cl-ai-core strong {
-          margin-top: 10px;
-        }
-
-        .cl-ai-core span {
-          margin-top: 5px;
-          color: #8f9eb8;
-          font-size: 10px;
-        }
-
-        .cl-chart-scene {
-          min-height: 600px;
-          display: grid;
-          grid-template-columns: minmax(0, 1.55fr) minmax(260px, .75fr);
-          align-items: center;
-          gap: 24px;
-          padding: 28px;
-        }
-
-        .cl-mini-chart-v2 {
-          min-width: 0;
-          width: 100%;
-          height: 390px;
-          padding: 18px 12px 4px;
-          border: 1px solid #173f58;
-          border-radius: 16px;
-          background: #071a27;
-        }
-
-        .cl-predict-card-v2 {
-          min-height: 210px;
-          padding: 28px;
-          display: flex;
-          flex-direction: column;
-          justify-content: center;
-          align-items: center;
-          border: 1px solid #4c4b74;
-          border-radius: 18px;
-          background: linear-gradient(145deg, #161d38, #0c182b);
-          text-align: center;
-        }
-
-        .cl-predict-card-v2.green {
-          border-color: #245b4c;
-          background: linear-gradient(145deg, #102e2a, #091e24);
-        }
-
-        .cl-predict-card-v2 span {
-          color: #9a9ed0;
-          font-size: 10px;
-          font-weight: 800;
-          letter-spacing: 1.2px;
-        }
-
-        .cl-predict-card-v2 strong {
-          margin-top: 15px;
-          font-size: clamp(25px, 4vw, 42px);
-        }
-
-        .cl-predict-card-v2 small {
-          margin-top: 10px;
-          color: var(--cl-muted);
-          line-height: 1.45;
-        }
-
-        .cl-risk-scene {
-          gap: 28px;
-          padding: 30px;
-          flex-wrap: wrap;
-        }
-
-        .cl-risk-stack {
-          width: min(430px, 90%);
-          display: flex;
-          flex-direction: column;
-          gap: 10px;
-        }
-
-        .cl-risk-level {
-          padding: 14px 18px;
-          border: 1px solid #25465a;
-          border-radius: 11px;
-          background: #0a1d2a;
-          color: #69899b;
-        }
-
-        .cl-risk-level.active {
-          border-color: #55d8aa;
-          background: #103228;
-          color: #8ff2cb;
-          box-shadow: 0 0 24px rgba(87,224,173,.12);
-        }
-
-        .cl-risk-result {
-          min-width: 190px;
-          padding: 26px;
-          border: 1px solid #35627b;
-          border-radius: 18px;
-          text-align: center;
-          font-size: 25px;
-          font-weight: 800;
-        }
-
-        .cl-risk-result.normal {
-          color: #70e3b5;
-          background: #102d26;
-          border-color: #285b4a;
-        }
-
-        .cl-risk-result.warning,
-        .cl-risk-result.monitor,
-        .cl-risk-result.high {
-          color: #f4c77c;
-          background: #312517;
-          border-color: #765a31;
-        }
-
-        .cl-decision-scene {
-          flex-direction: column;
-          gap: 10px;
-          padding: 30px;
-        }
-
-        .cl-tree-node {
-          width: min(520px, 88%);
-          padding: 15px;
-          border: 1px solid #26516b;
-          border-radius: 12px;
-          background: #0a2434;
-          text-align: center;
-        }
-
-        .cl-tree-node.final {
-          border-color: #3c8970;
-          background: #103127;
-          color: #8ae9c1;
-        }
-
-        .cl-tree-arrow {
-          color: #6ccff2;
-          font-size: 22px;
-        }
-
-        .cl-response-scene {
-          position: relative;
-          flex-direction: column;
-          gap: 18px;
-          padding: 38px;
-          text-align: center;
-        }
-
-        .cl-response-badge {
-          padding: 7px 11px;
-          border: 1px solid #7c653d;
-          border-radius: 999px;
-          background: #2e2517;
-          color: #efc97d;
-          font-size: 10px;
-          font-weight: 800;
-          letter-spacing: 1px;
-        }
-
-        .cl-reservoir {
-          width: min(420px, 90%);
-          padding: 22px;
-          border: 1px solid #3f5975;
-          border-radius: 18px;
-          background: #10263a;
-        }
-
-        .cl-reservoir strong,
-        .cl-reservoir span {
-          display: block;
-        }
-
-        .cl-reservoir span {
-          margin-top: 6px;
-          color: var(--cl-muted);
-          font-size: 11px;
-        }
-
-        .cl-particle-column {
-          position: relative;
-          width: 110px;
-          height: 135px;
-        }
-
-        .cl-particle-column i {
-          position: absolute;
-          left: 50%;
-          top: 0;
-          width: 9px;
-          height: 9px;
-          margin-left: -4px;
-          border-radius: 50%;
-          background: #7bd8ff;
-          box-shadow: 0 0 12px #7bd8ff;
-        }
-
-        .cl-response-tissue {
-          width: min(500px, 90%);
-          height: 46px;
-          border-radius: 14px;
-          background: linear-gradient(180deg, #a65f56, #773b3b);
-        }
-
-        .cl-response-scene p {
-          max-width: 560px;
-          color: var(--cl-muted);
-          line-height: 1.6;
-        }
-
-        .cl-repeat-scene {
-          position: relative;
-          overflow: hidden;
-        }
-
-        .cl-repeat-ring-v2 {
-          position: absolute;
-          left: 50%;
-          top: 50%;
-          width: 330px;
-          height: 330px;
-          margin-left: -165px;
-          margin-top: -165px;
-          border: 1px solid #285876;
-          border-radius: 50%;
-          box-shadow: inset 0 0 30px rgba(59,197,255,.04);
-        }
-
-        .cl-repeat-ring-v2 .dot {
-          position: absolute;
-          width: 11px;
-          height: 11px;
-          border-radius: 50%;
-          background: #58d7ff;
-          box-shadow: 0 0 15px #58d7ff;
-        }
-
-        .cl-repeat-ring-v2 .dot.one {
-          top: -5px;
-          left: 50%;
-        }
-
-        .cl-repeat-ring-v2 .dot.two {
-          right: -5px;
-          top: 50%;
-        }
-
-        .cl-repeat-ring-v2 .dot.three {
-          bottom: -5px;
-          left: 50%;
-        }
-
-        .cl-repeat-ring-v2 .dot.four {
-          left: -5px;
-          top: 50%;
-        }
-
-        .cl-repeat-center-v2 {
-          position: relative;
-          z-index: 5;
-          width: 260px;
-          min-height: 170px;
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          justify-content: center;
-          text-align: center;
-        }
-
-        .cl-repeat-center-v2 strong {
-          margin-top: 12px;
-          font-size: 24px;
-        }
-
-        .cl-repeat-center-v2 span {
-          margin-top: 6px;
-          color: var(--cl-muted);
-          font-size: 12px;
-        }
-
-        .cl-loading-text {
-          margin-top: 12px;
-          color: var(--cl-muted);
-          font-size: 11px;
-        }
-
-        @media (max-width: 1100px) {
-          .cl-main-layout {
-            flex-direction: column;
-          }
-
-          .cl-info-panel {
-            width: 100%;
-            flex-basis: auto;
-            display: grid;
-            grid-template-columns: repeat(2, minmax(0, 1fr));
-          }
-
-          .cl-chart-scene {
-            grid-template-columns: 1fr;
-          }
-
-          .cl-predict-card-v2 {
-            min-height: 150px;
-          }
-        }
-
-        @media (max-width: 760px) {
-          .cl-header {
-            flex-direction: column;
-          }
-
-          .cl-summary-grid {
-            grid-template-columns: repeat(2, minmax(0, 1fr));
-          }
-
-          .cl-info-panel {
-            grid-template-columns: 1fr;
-          }
-
-          .cl-stage-strip {
-            grid-template-columns: 1fr;
-          }
-
-          .cl-scene-shell,
-          .cl-scene-inner {
-            min-height: 650px;
-          }
-
-          .cl-sense-scene {
-            min-height: 650px;
-          }
-
-          .cl-patch-assembly-v2 {
-            top: 60px;
-            width: 82%;
-          }
-
-          .cl-patch-v2 {
-            height: 96px;
-          }
-
-          .cl-needle-row-v2 {
-            height: 72px;
-          }
-
-          .cl-needle-v2 {
-            width: 8px;
-            flex-basis: 8px;
-            height: 68px;
-          }
-
-          .cl-skin-box-v2 {
-            top: 238px;
-            width: 92%;
-          }
-
-          .cl-chart-scene {
-            padding: 18px 10px;
-          }
-
-          .cl-mini-chart-v2 {
-            height: 350px;
-          }
-
-          .cl-repeat-ring-v2 {
-            width: 280px;
-            height: 280px;
-            margin-left: -140px;
-            margin-top: -140px;
-          }
-        }
-      `}</style>
-
+    <div className="cl-page">
       <div className="cl-header">
         <div>
           <div className="cl-kicker">PRIMARY SIMULATION 03</div>
@@ -1392,9 +381,7 @@ export default function ClosedLoopSimulation() {
                   decision={decision}
                   responseMessage={responseMessage}
                   predictionChartData={predictionChartData}
-                  predictionDomain={predictionDomain}
                   responseChartData={responseChartData}
-                  responseDomain={responseDomain}
                 />
               </motion.div>
             </AnimatePresence>
@@ -1454,8 +441,8 @@ export default function ClosedLoopSimulation() {
               <div>
                 <strong>Research prototype</strong>
                 <span>
-                  SIMULATION ONLY — conceptual, not clinically validated dosing.
-                  No real insulin dose is calculated, recommended, or administered.
+                  The response step is a conceptual animation only. It is not a
+                  real dosing system and not medical advice.
                 </span>
               </div>
             </div>
@@ -1489,67 +476,152 @@ function StageVisual({
   decision,
   responseMessage,
   predictionChartData,
-  predictionDomain,
   responseChartData,
-  responseDomain,
 }) {
   if (stage === 0) {
     return (
-      <div className="cl-sense-scene">
+      <div
+        className="cl-sense-scene"
+        style={{
+          position: "relative",
+          width: "100%",
+          minHeight: 620,
+          height: 620,
+          overflow: "hidden",
+        }}
+      >
         <motion.div
-          className="cl-patch-assembly-v2"
-          animate={{ y: [0, 36, 36, 0] }}
+          className="cl-patch-assembly"
+          style={{
+            position: "absolute",
+            top: 34,
+            left: 0,
+            right: 0,
+            margin: "0 auto",
+            width: "min(510px, 72%)",
+            zIndex: 8,
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            pointerEvents: "none",
+          }}
+          animate={{ y: [0, 26, 26, 0] }}
           transition={{
-            duration: 4,
+            duration: 3.8,
             repeat: Infinity,
             times: [0, 0.34, 0.68, 1],
             ease: "easeInOut",
           }}
         >
-          <div className="cl-patch-v2">
+          <div
+            className="cl-patch"
+            style={{
+              position: "relative",
+              width: "100%",
+              height: 112,
+              minHeight: 112,
+              inset: "auto",
+              transform: "none",
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              justifyContent: "center",
+              textAlign: "center",
+              overflow: "visible",
+              borderRadius: "26px 26px 12px 12px",
+              boxSizing: "border-box",
+            }}
+          >
             <strong>VITALS PATCH</strong>
             <span>Microneedle glucose-sensing layer</span>
           </div>
 
-          <div className="cl-needle-row-v2">
+          <div
+            className="cl-needle-row"
+            style={{
+              position: "relative",
+              width: "calc(100% - 54px)",
+              height: 66,
+              marginTop: -1,
+              display: "flex",
+              alignItems: "flex-start",
+              justifyContent: "space-evenly",
+              gap: 8,
+              overflow: "visible",
+              zIndex: 10,
+            }}
+          >
             {Array.from({ length: 9 }).map((_, index) => (
               <motion.i
                 key={index}
-                className="cl-needle-v2"
+                style={{
+                  display: "block",
+                  position: "relative",
+                  width: 12,
+                  minWidth: 12,
+                  height: 66,
+                  minHeight: 66,
+                  clipPath: "polygon(0 0, 100% 0, 50% 100%)",
+                  background:
+                    "linear-gradient(180deg, #8decff 0%, #49cbf7 48%, #178fc5 100%)",
+                  filter: "drop-shadow(0 0 7px rgba(73,203,247,.72))",
+                  transformOrigin: "top center",
+                }}
                 animate={{
-                  scaleY: [0.8, 1.13, 1.13, 0.8],
+                  scaleY: [0.92, 1.08, 1.08, 0.92],
                   opacity: [0.82, 1, 1, 0.82],
                 }}
                 transition={{
-                  duration: 4,
+                  duration: 3.8,
                   repeat: Infinity,
                   times: [0, 0.34, 0.68, 1],
-                  delay: index * 0.035,
-                  ease: "easeInOut",
+                  delay: index * 0.025,
                 }}
               />
             ))}
           </div>
         </motion.div>
 
-        <div className="cl-skin-box-v2">
-          <div className="cl-skin-layer-v2 surface">Skin Surface</div>
-          <div className="cl-skin-layer-v2 epidermis">Epidermis</div>
-          <div className="cl-skin-layer-v2 dermis">Dermis</div>
-          <div className="cl-skin-layer-v2 fluid">Interstitial Fluid</div>
+        <div
+          className="cl-skin-box"
+          style={{
+            position: "absolute",
+            top: 228,
+            left: 0,
+            right: 0,
+            margin: "0 auto",
+            width: "min(620px, 82%)",
+            height: 318,
+            borderRadius: 26,
+            overflow: "hidden",
+            zIndex: 2,
+          }}
+        >
+          <div className="cl-skin-layer surface" style={{ height: 42 }}>
+            Skin Surface
+          </div>
+          <div className="cl-skin-layer epidermis" style={{ height: 116 }}>
+            Epidermis
+          </div>
+          <div className="cl-skin-layer dermis" style={{ height: 110 }}>
+            Dermis
+          </div>
+          <div className="cl-skin-layer fluid" style={{ height: 50 }}>
+            Interstitial Fluid
+          </div>
 
           {Array.from({ length: 16 }).map((_, index) => (
             <motion.span
               key={index}
-              className="cl-molecule-v2"
+              className="cl-molecule"
               style={{
                 left: `${8 + (index % 8) * 11}%`,
-                top: `${55 + (index % 4) * 9}%`,
+                top: `${50 + (index % 4) * 10}%`,
               }}
               animate={{
                 x: [0, index % 2 === 0 ? 10 : -10, 0],
                 y: [0, -8, 0],
-                opacity: [0.6, 1, 0.6],
+                opacity: [0.7, 1, 0.7],
               }}
               transition={{
                 duration: 1.6 + (index % 5) * 0.25,
@@ -1559,16 +631,29 @@ function StageVisual({
           ))}
 
           <motion.div
-            className="cl-detect-pulse-v2"
+            className="cl-detect-pulse"
             animate={{
-              scale: [0.8, 1.5, 2],
-              opacity: [0.75, 0.3, 0],
+              scale: [0.8, 1.4, 1.8],
+              opacity: [0.7, 0.3, 0],
             }}
-            transition={{ duration: 1.45, repeat: Infinity }}
+            transition={{ duration: 1.4, repeat: Infinity }}
           />
         </div>
 
-        <div className="cl-scene-note-v2">
+        <div
+          className="cl-scene-note"
+          style={{
+            position: "absolute",
+            left: 0,
+            right: 0,
+            bottom: 14,
+            margin: "0 auto",
+            width: "fit-content",
+            maxWidth: "calc(100% - 48px)",
+            textAlign: "center",
+            zIndex: 12,
+          }}
+        >
           Microneedle sensor detecting glucose in interstitial fluid...
         </div>
       </div>
@@ -1582,9 +667,9 @@ function StageVisual({
           className="cl-reading-display"
           animate={{
             boxShadow: [
-              "0 0 0 rgba(59,197,255,0)",
-              "0 0 32px rgba(59,197,255,.24)",
-              "0 0 0 rgba(59,197,255,0)",
+              "0 0 0 rgba(59,197,255,0.0)",
+              "0 0 28px rgba(59,197,255,0.25)",
+              "0 0 0 rgba(59,197,255,0.0)",
             ],
           }}
           transition={{ duration: 2, repeat: Infinity }}
@@ -1594,9 +679,7 @@ function StageVisual({
             {currentGlucose.toFixed(2)}
             <small> mg/dL</small>
           </div>
-          <div className="cl-reading-trend">
-            Trend: {trendLabel(currentGlucose, predictedGlucose)}
-          </div>
+          <div className="cl-reading-trend">Trend: {trendLabel(currentGlucose, predictedGlucose)}</div>
         </motion.div>
 
         <div className="cl-watch-card">
@@ -1646,12 +729,34 @@ function StageVisual({
 
   if (stage === 3) {
     return (
-      <div className="cl-chart-scene">
-        <div className="cl-mini-chart-v2">
-          <ResponsiveContainer width="100%" height="100%">
+      <div
+        className="cl-chart-scene"
+        style={{
+          width: "100%",
+          minHeight: 560,
+          display: "grid",
+          gridTemplateColumns: "minmax(0, 1.45fr) minmax(260px, .85fr)",
+          alignItems: "center",
+          gap: 30,
+          padding: 34,
+          boxSizing: "border-box",
+        }}
+      >
+        <div
+          className="cl-mini-chart"
+          style={{
+            width: "100%",
+            minWidth: 0,
+            maxWidth: "none",
+            height: 340,
+            padding: "18px 12px 8px",
+            boxSizing: "border-box",
+          }}
+        >
+          <ResponsiveContainer width="100%" height={310}>
             <LineChart
               data={predictionChartData}
-              margin={{ top: 18, right: 24, left: 4, bottom: 18 }}
+              margin={{ top: 18, right: 22, left: 6, bottom: 18 }}
             >
               <CartesianGrid
                 stroke="#18384d"
@@ -1662,14 +767,15 @@ function StageVisual({
                 dataKey="label"
                 stroke="#7393a8"
                 interval={0}
-                tick={{ fontSize: 11 }}
+                tick={{ fontSize: 12 }}
                 tickMargin={10}
+                minTickGap={0}
               />
               <YAxis
                 stroke="#7393a8"
-                domain={predictionDomain}
-                width={48}
-                tick={{ fontSize: 11 }}
+                width={50}
+                tick={{ fontSize: 12 }}
+                domain={["dataMin - 15", "dataMax + 15"]}
                 tickCount={5}
               />
               <Tooltip
@@ -1678,25 +784,22 @@ function StageVisual({
                   border: "1px solid #245069",
                   borderRadius: 10,
                 }}
-                labelStyle={{ color: "#d9f3ff" }}
               />
               <Line
                 type="monotone"
                 dataKey="observed"
-                name="Observed"
                 stroke="#3bc5ff"
                 strokeWidth={3}
-                connectNulls={false}
+                connectNulls
                 dot={{ r: 4 }}
                 activeDot={{ r: 6 }}
               />
               <Line
                 type="monotone"
                 dataKey="predicted"
-                name="Predicted"
                 stroke="#a98aff"
                 strokeWidth={3}
-                strokeDasharray="7 6"
+                strokeDasharray="6 6"
                 connectNulls
                 dot={{ r: 5 }}
                 activeDot={{ r: 7 }}
@@ -1705,7 +808,22 @@ function StageVisual({
           </ResponsiveContainer>
         </div>
 
-        <div className="cl-predict-card-v2">
+        <div
+          className="cl-predict-card"
+          style={{
+            width: "100%",
+            maxWidth: 410,
+            minHeight: 190,
+            justifySelf: "center",
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            justifyContent: "center",
+            textAlign: "center",
+            padding: 28,
+            boxSizing: "border-box",
+          }}
+        >
           <span>AI PREDICTION</span>
           <strong>{predictedGlucose.toFixed(2)} mg/dL</strong>
           <small>Approximate 15-minute-ahead predicted reading</small>
@@ -1760,26 +878,20 @@ function StageVisual({
   if (stage === 6) {
     return (
       <div className="cl-response-scene">
-        <div className="cl-response-badge">
-          SIMULATION ONLY — NOT CLINICAL DOSING
-        </div>
+        <div className="cl-response-badge">SIMULATION ONLY</div>
 
         <div className="cl-reservoir">
-          <strong>Conceptual Insulin-Response Simulation</strong>
-          <span>Visual research demonstration only</span>
+          <strong>Conceptual Insulin Reservoir</strong>
+          <span>Visual research demonstration</span>
         </div>
 
         <div className="cl-particle-column">
           {Array.from({ length: 8 }).map((_, index) => (
             <motion.i
               key={index}
-              animate={{
-                y: [0, 118],
-                x: [0, index % 2 === 0 ? 10 : -10],
-                opacity: [0, 1, 0],
-              }}
+              animate={{ y: [0, 115], opacity: [0, 1, 0] }}
               transition={{
-                duration: 1.65,
+                duration: 1.6,
                 repeat: Infinity,
                 delay: index * 0.18,
               }}
@@ -1796,12 +908,34 @@ function StageVisual({
 
   if (stage === 7) {
     return (
-      <div className="cl-chart-scene">
-        <div className="cl-mini-chart-v2">
-          <ResponsiveContainer width="100%" height="100%">
+      <div
+        className="cl-chart-scene"
+        style={{
+          width: "100%",
+          minHeight: 560,
+          display: "grid",
+          gridTemplateColumns: "minmax(0, 1.45fr) minmax(260px, .85fr)",
+          alignItems: "center",
+          gap: 30,
+          padding: 34,
+          boxSizing: "border-box",
+        }}
+      >
+        <div
+          className="cl-mini-chart"
+          style={{
+            width: "100%",
+            minWidth: 0,
+            maxWidth: "none",
+            height: 340,
+            padding: "18px 12px 8px",
+            boxSizing: "border-box",
+          }}
+        >
+          <ResponsiveContainer width="100%" height={310}>
             <AreaChart
               data={responseChartData}
-              margin={{ top: 18, right: 24, left: 4, bottom: 18 }}
+              margin={{ top: 18, right: 22, left: 6, bottom: 18 }}
             >
               <CartesianGrid
                 stroke="#18384d"
@@ -1814,12 +948,13 @@ function StageVisual({
                 interval={0}
                 tick={{ fontSize: 11 }}
                 tickMargin={10}
+                minTickGap={0}
               />
               <YAxis
                 stroke="#7393a8"
-                domain={responseDomain}
-                width={48}
-                tick={{ fontSize: 11 }}
+                width={50}
+                tick={{ fontSize: 12 }}
+                domain={["dataMin - 15", "dataMax + 15"]}
                 tickCount={5}
               />
               <Tooltip
@@ -1828,12 +963,10 @@ function StageVisual({
                   border: "1px solid #245069",
                   borderRadius: 10,
                 }}
-                labelStyle={{ color: "#d9f3ff" }}
               />
               <Area
                 type="monotone"
                 dataKey="glucose"
-                name="Simulated glucose"
                 stroke="#57e0ad"
                 fill="#57e0ad"
                 fillOpacity={0.18}
@@ -1845,36 +978,92 @@ function StageVisual({
           </ResponsiveContainer>
         </div>
 
-        <div className="cl-predict-card-v2 green">
+        <div
+          className="cl-predict-card green"
+          style={{
+            width: "100%",
+            maxWidth: 410,
+            minHeight: 190,
+            justifySelf: "center",
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            justifyContent: "center",
+            textAlign: "center",
+            padding: 28,
+            boxSizing: "border-box",
+          }}
+        >
           <span>SIMULATED GLUCOSE RESPONSE</span>
           <strong>
             {Number(
               responseChartData[responseChartData.length - 1]?.glucose
-            ).toFixed(2)}{" "}
-            mg/dL
+            ).toFixed(2)} mg/dL
           </strong>
-          <small>
-            Conceptual post-response glucose behaviour — simulation only
-          </small>
+          <small>Conceptual post-response glucose behaviour</small>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="cl-repeat-scene">
-      <motion.div
-        className="cl-repeat-ring-v2"
-        animate={{ rotate: 360 }}
-        transition={{ duration: 8, repeat: Infinity, ease: "linear" }}
+    <div
+      className="cl-repeat-scene"
+      style={{
+        position: "relative",
+        width: "100%",
+        minHeight: 560,
+        display: "grid",
+        placeItems: "center",
+        overflow: "hidden",
+      }}
+    >
+      <div
+        style={{
+          position: "absolute",
+          inset: 0,
+          display: "grid",
+          placeItems: "center",
+          pointerEvents: "none",
+        }}
       >
-        <span className="dot one" />
-        <span className="dot two" />
-        <span className="dot three" />
-        <span className="dot four" />
-      </motion.div>
+        <motion.div
+          className="cl-repeat-ring"
+          style={{
+            position: "relative",
+            width: 320,
+            height: 320,
+            inset: "auto",
+            margin: 0,
+            borderRadius: "50%",
+          }}
+          animate={{ rotate: 360 }}
+          transition={{ duration: 8, repeat: Infinity, ease: "linear" }}
+        >
+          <span className="dot one" />
+          <span className="dot two" />
+          <span className="dot three" />
+          <span className="dot four" />
+        </motion.div>
+      </div>
 
-      <div className="cl-repeat-center-v2">
+      <div
+        className="cl-repeat-center"
+        style={{
+          position: "relative",
+          inset: "auto",
+          transform: "none",
+          width: 280,
+          minHeight: 180,
+          zIndex: 5,
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          justifyContent: "center",
+          gap: 10,
+          textAlign: "center",
+        }}
+      >
         <RefreshCcw size={42} />
         <strong>Monitoring Again</strong>
         <span>Closed-loop cycle restarting</span>

@@ -217,7 +217,7 @@ export default function ClosedLoopSimulation() {
     base.push({
       label: "Now",
       observed: currentGlucose,
-      predicted: null,
+      predicted: currentGlucose,
     });
 
     base.push({
@@ -244,11 +244,11 @@ export default function ClosedLoopSimulation() {
     }
 
     return [
-      { step: "0", glucose: predicted },
-      { step: "1", glucose: predicted - (predicted - endValue) * 0.2 },
-      { step: "2", glucose: predicted - (predicted - endValue) * 0.45 },
-      { step: "3", glucose: predicted - (predicted - endValue) * 0.7 },
-      { step: "4", glucose: endValue },
+      { step: "Predicted", glucose: predicted },
+      { step: "+5 min", glucose: predicted - (predicted - endValue) * 0.2 },
+      { step: "+10 min", glucose: predicted - (predicted - endValue) * 0.45 },
+      { step: "+15 min", glucose: predicted - (predicted - endValue) * 0.7 },
+      { step: "+20 min", glucose: endValue },
     ];
   }, [currentGlucose, predictedGlucose]);
 
@@ -484,8 +484,13 @@ function StageVisual({
         <div className="cl-sense-stage">
           <motion.div
             className="cl-patch-assembly"
-            animate={{ y: [0, 5, 0] }}
-            transition={{ duration: 2.2, repeat: Infinity }}
+            animate={{ y: [0, 30, 30, 0] }}
+            transition={{
+              duration: 3.6,
+              repeat: Infinity,
+              times: [0, 0.35, 0.68, 1],
+              ease: "easeInOut",
+            }}
           >
             <div className="cl-patch">
               <strong>VITALS PATCH</strong>
@@ -496,11 +501,11 @@ function StageVisual({
               {Array.from({ length: 9 }).map((_, index) => (
                 <motion.i
                   key={index}
-                  animate={{ scaleY: [0.92, 1.08, 0.92] }}
+                  animate={{ opacity: [0.75, 1, 1, 0.75] }}
                   transition={{
-                    duration: 1.3,
+                    duration: 3.6,
                     repeat: Infinity,
-                    delay: index * 0.08,
+                    delay: index * 0.04,
                   }}
                 />
               ))}
@@ -623,10 +628,24 @@ function StageVisual({
       <div className="cl-chart-scene">
         <div className="cl-mini-chart">
           <ResponsiveContainer width="100%" height={280}>
-            <LineChart data={predictionChartData}>
+            <LineChart
+              data={predictionChartData}
+              margin={{ top: 16, right: 18, left: 0, bottom: 10 }}
+            >
               <CartesianGrid stroke="#18384d" strokeDasharray="4 6" vertical={false} />
-              <XAxis dataKey="label" stroke="#7393a8" />
-              <YAxis stroke="#7393a8" />
+              <XAxis
+                dataKey="label"
+                stroke="#7393a8"
+                interval={0}
+                tick={{ fontSize: 12 }}
+                tickMargin={10}
+              />
+              <YAxis
+                stroke="#7393a8"
+                domain={["dataMin - 10", "dataMax + 10"]}
+                width={44}
+                tick={{ fontSize: 12 }}
+              />
               <Tooltip
                 contentStyle={{
                   background: "#091d2b",
@@ -640,7 +659,8 @@ function StageVisual({
                 stroke="#3bc5ff"
                 strokeWidth={3}
                 connectNulls
-                dot
+                dot={{ r: 4, strokeWidth: 2 }}
+                activeDot={{ r: 6 }}
               />
               <Line
                 type="monotone"
@@ -649,7 +669,8 @@ function StageVisual({
                 strokeWidth={3}
                 strokeDasharray="6 6"
                 connectNulls
-                dot
+                dot={{ r: 4, strokeWidth: 2 }}
+                activeDot={{ r: 6 }}
               />
             </LineChart>
           </ResponsiveContainer>
@@ -743,10 +764,24 @@ function StageVisual({
       <div className="cl-chart-scene">
         <div className="cl-mini-chart">
           <ResponsiveContainer width="100%" height={280}>
-            <AreaChart data={responseChartData}>
+            <AreaChart
+              data={responseChartData}
+              margin={{ top: 16, right: 18, left: 0, bottom: 10 }}
+            >
               <CartesianGrid stroke="#18384d" strokeDasharray="4 6" vertical={false} />
-              <XAxis dataKey="step" stroke="#7393a8" />
-              <YAxis stroke="#7393a8" />
+              <XAxis
+                dataKey="step"
+                stroke="#7393a8"
+                interval={0}
+                tick={{ fontSize: 12 }}
+                tickMargin={10}
+              />
+              <YAxis
+                stroke="#7393a8"
+                domain={["dataMin - 10", "dataMax + 10"]}
+                width={44}
+                tick={{ fontSize: 12 }}
+              />
               <Tooltip
                 contentStyle={{
                   background: "#091d2b",

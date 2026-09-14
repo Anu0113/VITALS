@@ -1,184 +1,782 @@
-.counter {
-  font-size: 16px;
-  padding: 5px 10px;
-  border-radius: 5px;
-  color: var(--accent);
-  background: var(--accent-bg);
-  border: 2px solid transparent;
-  transition: border-color 0.3s;
-  margin-bottom: 24px;
+.counter { 
+  font-size: 16px; 
+  padding: 5px 10px; 
+  border-radius: 5px; 
+  color: var(--accent); 
+  background: var(--accent-bg); 
+  border: 2px solid transparent; 
+  transition: border-color 0.3s; 
+  margin-bottom: 24px; 
+ 
+  &:hover { 
+    border-color: var(--accent-border); 
+  } 
 
-  &:hover {
-    border-color: var(--accent-border);
-  }
-  &:focus-visible {
-    outline: 2px solid var(--accent);
-    outline-offset: 2px;
-  }
+  &:focus-visible { 
+    outline: 2px solid var(--accent); 
+    outline-offset: 2px; 
+  } 
+} 
+ 
+.hero { 
+  position: relative; 
+ 
+  .base, 
+  .framework, 
+  .vite { 
+    inset-inline: 0; 
+    margin: 0 auto; 
+  } 
+ 
+  .base { 
+    width: 170px; 
+    position: relative; 
+    z-index: 0; 
+  } 
+ 
+  .framework, 
+  .vite { 
+    position: absolute; 
+  } 
+ 
+  .framework { 
+    z-index: 1; 
+    top: 34px; 
+    height: 28px; 
+    transform: perspective(2000px)
+      rotateZ(300deg)
+      rotateX(44deg)
+      rotateY(39deg)
+      scale(1.4); 
+  } 
+ 
+  .vite { 
+    z-index: 0; 
+    top: 107px; 
+    height: 26px; 
+    width: auto; 
+    transform: perspective(2000px)
+      rotateZ(300deg)
+      rotateX(40deg)
+      rotateY(39deg)
+      scale(0.8); 
+  } 
+} 
+ 
+#center { 
+  display: flex; 
+  flex-direction: column; 
+  gap: 25px; 
+  place-content: center; 
+  place-items: center; 
+  flex-grow: 1; 
+ 
+  @media (max-width: 1024px) { 
+    padding: 32px 20px 24px; 
+    gap: 18px; 
+  } 
+} 
+ 
+#next-steps { 
+  display: flex; 
+  border-top: 1px solid var(--border); 
+  text-align: left; 
+ 
+  & > div { 
+    flex: 1 1 0; 
+    padding: 32px; 
+
+    @media (max-width: 1024px) { 
+      padding: 24px 20px; 
+    } 
+  } 
+ 
+  .icon { 
+    margin-bottom: 16px; 
+    width: 22px; 
+    height: 22px; 
+  } 
+ 
+  @media (max-width: 1024px) { 
+    flex-direction: column; 
+    text-align: center; 
+  } 
+} 
+ 
+#docs { 
+  border-right: 1px solid var(--border); 
+ 
+  @media (max-width: 1024px) { 
+    border-right: none; 
+    border-bottom: 1px solid var(--border); 
+  } 
+} 
+ 
+#next-steps ul { 
+  list-style: none; 
+  padding: 0; 
+  display: flex; 
+  gap: 8px; 
+  margin: 32px 0 0; 
+ 
+  .logo { 
+    height: 18px; 
+  } 
+ 
+  a { 
+    color: var(--text-h); 
+    font-size: 16px; 
+    border-radius: 6px; 
+    background: var(--social-bg); 
+    display: flex; 
+    padding: 6px 12px; 
+    align-items: center; 
+    gap: 8px; 
+    text-decoration: none; 
+    transition: box-shadow 0.3s; 
+ 
+    &:hover { 
+      box-shadow: var(--shadow); 
+    } 
+
+    .button-icon { 
+      height: 18px; 
+      width: 18px; 
+    } 
+  } 
+ 
+  @media (max-width: 1024px) { 
+    margin-top: 20px; 
+    flex-wrap: wrap; 
+    justify-content: center; 
+ 
+    li { 
+      flex: 1 1 calc(50% - 8px); 
+    } 
+ 
+    a { 
+      width: 100%; 
+      justify-content: center; 
+      box-sizing: border-box; 
+    } 
+  } 
+} 
+ 
+#spacer { 
+  height: 88px; 
+  border-top: 1px solid var(--border); 
+
+  @media (max-width: 1024px) { 
+    height: 48px; 
+  } 
+} 
+ 
+.ticks { 
+  position: relative; 
+  width: 100%; 
+ 
+  &::before, 
+  &::after { 
+    content: ''; 
+    position: absolute; 
+    top: -4.5px; 
+    border: 5px solid transparent; 
+  } 
+ 
+  &::before { 
+    left: 0; 
+    border-left-color: var(--border); 
+  } 
+
+  &::after { 
+    right: 0; 
+    border-right-color: var(--border); 
+  } 
 }
 
-.hero {
-  position: relative;
 
-  .base,
-  .framework,
-  .vite {
-    inset-inline: 0;
-    margin: 0 auto;
-  }
+/* =========================================================
+   CLOSED LOOP VITALS - SENSE / MICRONEEDLE ALIGNMENT
+   ========================================================= */
 
-  .base {
-    width: 170px;
-    position: relative;
-    z-index: 0;
-  }
-
-  .framework,
-  .vite {
-    position: absolute;
-  }
-
-  .framework {
-    z-index: 1;
-    top: 34px;
-    height: 28px;
-    transform: perspective(2000px) rotateZ(300deg) rotateX(44deg) rotateY(39deg)
-      scale(1.4);
-  }
-
-  .vite {
-    z-index: 0;
-    top: 107px;
-    height: 26px;
-    width: auto;
-    transform: perspective(2000px) rotateZ(300deg) rotateX(40deg) rotateY(39deg)
-      scale(0.8);
-  }
-}
-
-#center {
-  display: flex;
-  flex-direction: column;
-  gap: 25px;
-  place-content: center;
-  place-items: center;
-  flex-grow: 1;
-
-  @media (max-width: 1024px) {
-    padding: 32px 20px 24px;
-    gap: 18px;
-  }
-}
-
-#next-steps {
-  display: flex;
-  border-top: 1px solid var(--border);
-  text-align: left;
-
-  & > div {
-    flex: 1 1 0;
-    padding: 32px;
-    @media (max-width: 1024px) {
-      padding: 24px 20px;
-    }
-  }
-
-  .icon {
-    margin-bottom: 16px;
-    width: 22px;
-    height: 22px;
-  }
-
-  @media (max-width: 1024px) {
-    flex-direction: column;
-    text-align: center;
-  }
-}
-
-#docs {
-  border-right: 1px solid var(--border);
-
-  @media (max-width: 1024px) {
-    border-right: none;
-    border-bottom: 1px solid var(--border);
-  }
-}
-
-#next-steps ul {
-  list-style: none;
-  padding: 0;
-  display: flex;
-  gap: 8px;
-  margin: 32px 0 0;
-
-  .logo {
-    height: 18px;
-  }
-
-  a {
-    color: var(--text-h);
-    font-size: 16px;
-    border-radius: 6px;
-    background: var(--social-bg);
-    display: flex;
-    padding: 6px 12px;
-    align-items: center;
-    gap: 8px;
-    text-decoration: none;
-    transition: box-shadow 0.3s;
-
-    &:hover {
-      box-shadow: var(--shadow);
-    }
-    .button-icon {
-      height: 18px;
-      width: 18px;
-    }
-  }
-
-  @media (max-width: 1024px) {
-    margin-top: 20px;
-    flex-wrap: wrap;
-    justify-content: center;
-
-    li {
-      flex: 1 1 calc(50% - 8px);
-    }
-
-    a {
-      width: 100%;
-      justify-content: center;
-      box-sizing: border-box;
-    }
-  }
-}
-
-#spacer {
-  height: 88px;
-  border-top: 1px solid var(--border);
-  @media (max-width: 1024px) {
-    height: 48px;
-  }
-}
-
-.ticks {
+.sense-visual {
   position: relative;
   width: 100%;
+  min-height: 620px;
+  padding: 28px;
+  box-sizing: border-box;
 
-  &::before,
-  &::after {
-    content: '';
-    position: absolute;
-    top: -4.5px;
-    border: 5px solid transparent;
+  border: 1px solid rgba(55, 130, 171, 0.36);
+  border-radius: 28px;
+
+  background:
+    radial-gradient(
+      circle at 50% 12%,
+      rgba(36, 158, 220, 0.12),
+      transparent 34%
+    ),
+    linear-gradient(
+      180deg,
+      #061522 0%,
+      #071724 100%
+    );
+
+  overflow: hidden;
+}
+
+
+/* Main diagram coordinate system */
+
+.skin-stage {
+  position: relative;
+  width: 100%;
+  min-height: 560px;
+}
+
+
+/* =========================================================
+   SKIN
+   ========================================================= */
+
+.skin-block {
+  position: absolute;
+
+  left: 50%;
+  bottom: 74px;
+
+  transform: translateX(-50%);
+
+  width: 78%;
+  max-width: 660px;
+  height: 300px;
+
+  overflow: hidden;
+
+  border-radius: 28px;
+
+  box-shadow:
+    0 20px 45px rgba(0, 0, 0, 0.22),
+    0 0 0 1px rgba(255, 255, 255, 0.03);
+
+  z-index: 1;
+}
+
+
+.skin-layer {
+  position: relative;
+
+  display: flex;
+  align-items: flex-start;
+
+  box-sizing: border-box;
+
+  padding-left: 26px;
+  padding-top: 12px;
+
+  font-size: 15px;
+  font-weight: 700;
+
+  color: rgba(255, 255, 255, 0.86);
+}
+
+
+/* Very top skin surface */
+
+.skin-surface {
+  height: 40px;
+
+  background:
+    linear-gradient(
+      180deg,
+      #dc9a78 0%,
+      #d58f70 100%
+    );
+}
+
+
+/* Epidermis */
+
+.epidermis-layer {
+  height: 110px;
+
+  background:
+    linear-gradient(
+      180deg,
+      #e3a58e 0%,
+      #dc967f 100%
+    );
+}
+
+
+/* Dermis */
+
+.dermis-layer {
+  height: 150px;
+
+  background:
+    linear-gradient(
+      180deg,
+      #bd7773 0%,
+      #a76472 100%
+    );
+}
+
+
+/* =========================================================
+   PATCH
+   ========================================================= */
+
+.patch-assembly {
+  position: absolute;
+
+  left: 50%;
+
+  /*
+    This positions the patch directly above the skin.
+    If you want it slightly higher/lower, change ONLY this.
+  */
+  bottom: 354px;
+
+  transform: translateX(-50%);
+
+  width: min(420px, 68%);
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+
+  z-index: 4;
+}
+
+
+.patch-body {
+  position: relative;
+
+  width: 100%;
+  height: 125px;
+
+  display: flex;
+  flex-direction: column;
+
+  align-items: center;
+  justify-content: center;
+
+  box-sizing: border-box;
+
+  border: 1px solid rgba(70, 181, 232, 0.64);
+
+  border-radius: 26px 26px 8px 8px;
+
+  background:
+    linear-gradient(
+      180deg,
+      #205979 0%,
+      #164761 100%
+    );
+
+  box-shadow:
+    0 18px 35px rgba(0, 0, 0, 0.24),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06);
+
+  color: #f3fbff;
+
+  text-align: center;
+}
+
+
+.patch-title {
+  margin: 0 0 6px;
+
+  font-size: 20px;
+  line-height: 1.2;
+
+  font-weight: 800;
+
+  letter-spacing: 0.04em;
+}
+
+
+.patch-subtitle {
+  margin: 0;
+
+  font-size: 13px;
+
+  color: #a9cade;
+}
+
+
+/* =========================================================
+   MICRONEEDLES
+   ========================================================= */
+
+.needle-row {
+  position: relative;
+
+  width: calc(100% - 42px);
+  height: 54px;
+
+  margin-top: -1px;
+
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-evenly;
+
+  z-index: 5;
+}
+
+
+.needle {
+  width: 11px;
+  height: 54px;
+
+  flex: 0 0 auto;
+
+  clip-path: polygon(
+    0 0,
+    100% 0,
+    50% 100%
+  );
+
+  background:
+    linear-gradient(
+      180deg,
+      #83e7ff 0%,
+      #49c8f5 42%,
+      #259ed2 100%
+    );
+
+  filter:
+    drop-shadow(
+      0 0 6px rgba(67, 201, 255, 0.38)
+    );
+}
+
+
+/*
+  Tiny overlap makes the needles visually touch / enter
+  the skin rather than appearing detached.
+*/
+
+.patch-assembly .needle-row {
+  transform: translateY(0);
+}
+
+
+/* =========================================================
+   GLUCOSE PARTICLES
+   ========================================================= */
+
+.glucose-particle {
+  position: absolute;
+
+  width: 18px;
+  height: 18px;
+
+  border-radius: 50%;
+
+  background:
+    radial-gradient(
+      circle at 35% 30%,
+      #fff19a 0%,
+      #f7dc6b 38%,
+      #d7b344 100%
+    );
+
+  box-shadow:
+    0 0 12px rgba(255, 223, 108, 0.52);
+
+  opacity: 0.95;
+
+  animation:
+    glucoseFloat 3.8s ease-in-out infinite;
+}
+
+
+.glucose-particle:nth-of-type(1) {
+  left: 8%;
+  top: 18%;
+  animation-delay: 0s;
+}
+
+.glucose-particle:nth-of-type(2) {
+  left: 19%;
+  top: 37%;
+  animation-delay: 0.4s;
+}
+
+.glucose-particle:nth-of-type(3) {
+  left: 31%;
+  top: 59%;
+  animation-delay: 0.8s;
+}
+
+.glucose-particle:nth-of-type(4) {
+  left: 44%;
+  top: 20%;
+  animation-delay: 1.2s;
+}
+
+.glucose-particle:nth-of-type(5) {
+  left: 55%;
+  top: 37%;
+  animation-delay: 1.6s;
+}
+
+.glucose-particle:nth-of-type(6) {
+  left: 68%;
+  top: 58%;
+  animation-delay: 2s;
+}
+
+.glucose-particle:nth-of-type(7) {
+  left: 80%;
+  top: 32%;
+  animation-delay: 2.4s;
+}
+
+.glucose-particle:nth-of-type(8) {
+  left: 88%;
+  top: 57%;
+  animation-delay: 2.8s;
+}
+
+
+@keyframes glucoseFloat {
+
+  0%,
+  100% {
+    transform: translateY(0) scale(1);
   }
 
-  &::before {
-    left: 0;
-    border-left-color: var(--border);
+  50% {
+    transform: translateY(-9px) scale(1.07);
   }
-  &::after {
-    right: 0;
-    border-right-color: var(--border);
+}
+
+
+/* =========================================================
+   STATUS MESSAGE
+   ========================================================= */
+
+.sensor-status-bubble {
+  position: absolute;
+
+  left: 50%;
+  bottom: 24px;
+
+  transform: translateX(-50%);
+
+  width: max-content;
+  max-width: calc(100% - 40px);
+
+  box-sizing: border-box;
+
+  padding: 13px 20px;
+
+  border: 1px solid rgba(49, 137, 181, 0.58);
+  border-radius: 16px;
+
+  background:
+    rgba(9, 40, 57, 0.94);
+
+  box-shadow:
+    0 12px 26px rgba(0, 0, 0, 0.2);
+
+  color: #8fddfa;
+
+  font-size: 15px;
+  line-height: 1.4;
+
+  text-align: center;
+
+  z-index: 6;
+}
+
+
+/* =========================================================
+   RESPONSIVE
+   ========================================================= */
+
+@media (max-width: 1200px) {
+
+  .sense-visual {
+    min-height: 590px;
+  }
+
+  .skin-stage {
+    min-height: 530px;
+  }
+
+  .skin-block {
+    width: 84%;
+    max-width: 600px;
+    height: 285px;
+  }
+
+  .patch-assembly {
+    width: min(380px, 70%);
+    bottom: 339px;
+  }
+
+  .patch-body {
+    height: 115px;
+  }
+
+  .needle {
+    height: 50px;
+  }
+}
+
+
+@media (max-width: 900px) {
+
+  .sense-visual {
+    min-height: 560px;
+    padding: 20px;
+  }
+
+  .skin-stage {
+    min-height: 510px;
+  }
+
+  .skin-block {
+    width: 90%;
+    height: 270px;
+    bottom: 72px;
+  }
+
+  .skin-surface {
+    height: 36px;
+  }
+
+  .epidermis-layer {
+    height: 100px;
+  }
+
+  .dermis-layer {
+    height: 134px;
+  }
+
+  .patch-assembly {
+    width: min(330px, 72%);
+    bottom: 326px;
+  }
+
+  .patch-body {
+    height: 105px;
+  }
+
+  .needle-row {
+    width: calc(100% - 32px);
+    height: 48px;
+  }
+
+  .needle {
+    width: 9px;
+    height: 48px;
+  }
+
+  .patch-title {
+    font-size: 17px;
+  }
+
+  .patch-subtitle {
+    font-size: 12px;
+  }
+}
+
+
+@media (max-width: 600px) {
+
+  .sense-visual {
+    min-height: 500px;
+
+    padding:
+      16px 12px;
+
+    border-radius: 20px;
+  }
+
+  .skin-stage {
+    min-height: 460px;
+  }
+
+  .skin-block {
+    width: 96%;
+
+    height: 240px;
+
+    bottom: 70px;
+
+    border-radius: 20px;
+  }
+
+  .skin-surface {
+    height: 34px;
+  }
+
+  .epidermis-layer {
+    height: 88px;
+  }
+
+  .dermis-layer {
+    height: 118px;
+  }
+
+  .skin-layer {
+    padding-left: 17px;
+    padding-top: 10px;
+
+    font-size: 12px;
+  }
+
+  .patch-assembly {
+    width: min(270px, 76%);
+
+    bottom: 285px;
+  }
+
+  .patch-body {
+    height: 90px;
+
+    border-radius:
+      20px 20px 6px 6px;
+  }
+
+  .patch-title {
+    font-size: 15px;
+  }
+
+  .patch-subtitle {
+    padding: 0 10px;
+
+    font-size: 10px;
+  }
+
+  .needle-row {
+    width: calc(100% - 26px);
+    height: 40px;
+  }
+
+  .needle {
+    width: 8px;
+    height: 40px;
+  }
+
+  .glucose-particle {
+    width: 14px;
+    height: 14px;
+  }
+
+  .sensor-status-bubble {
+    bottom: 14px;
+
+    width: calc(100% - 24px);
+
+    padding: 11px 13px;
+
+    font-size: 12px;
+
+    border-radius: 13px;
   }
 }

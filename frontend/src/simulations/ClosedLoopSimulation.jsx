@@ -655,7 +655,7 @@ export default function ClosedLoopSimulation() {
           top: 52px;
           left: 50%;
           width: min(500px, 72%);
-          transform: translateX(-50%);
+          translate: -50% 0;
           z-index: 10;
           pointer-events: none;
         }
